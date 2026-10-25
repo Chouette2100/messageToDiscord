@@ -12,6 +12,11 @@ import (
 	"messageToDiscord/internal/mail"
 )
 
+/*
+sendmailのふりをして受け取ったメールをDiscordに転送する
+
+v.0.1.1 不足していたファイルを追加する。
+*/
 func main() {
 	webhookURL := os.Getenv("DISCORD_WEBHOOK_URL")
 	args := os.Args[1:]
