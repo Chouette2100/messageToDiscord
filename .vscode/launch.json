@@ -1,0 +1,30 @@
+{
+    // IntelliSense を使用して利用可能な属性を学べます。
+    // 既存の属性の説明をホバーして表示します。
+    // 詳細情報は次を確認してください: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Package",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${fileDirname}",
+            "console": "integratedTerminal",
+            "dlvFlags": ["--check-go-version=false"],
+            "env": {
+                "SOPS_AGE_KEY_FILE": "/home/chouette/.config/age/key2.txt",
+            },
+            "args": [
+                "-s",
+                "test",
+                "-f",
+                "admin@nixos",
+                "-F",
+                "mail.txt",
+                // "hanakin_happy_night_007?block_id=85901",
+                // "okazemradiocm1",
+            ]
+        }
+    ]
+}

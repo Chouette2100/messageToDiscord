@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "go build messageToDiscord",
+            "label": "go build binary",
             "type": "shell",
             "options": {
                 "env": {
@@ -15,7 +15,9 @@
             "args": [
                 "build",
                 "-v",
-                "./..."
+                "-o",
+                "messageToDiscord",
+                "."
             ],
             "problemMatcher": [],
             "group": {
@@ -24,19 +26,15 @@
             }
         },
         {
-            "label": "go install",
+            "label": "go build all packages",
             "type": "shell",
             "command": "go",
             "args": [
-                "install",
+                "build",
                 "-v",
                 "./..."
             ],
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
+            "problemMatcher": []
         }
     ]
 }

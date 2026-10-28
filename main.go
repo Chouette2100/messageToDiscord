@@ -3,21 +3,83 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"golang.org/x/term"
+
 	"messageToDiscord/internal/discord"
 	"messageToDiscord/internal/mail"
+
+	"github.com/Chouette2100/srapi/v2"
+	"github.com/Chouette2100/exsrapi/v2"
 )
 
 /*
 sendmailのふりをして受け取ったメールをDiscordに転送する
 
 v.0.1.1 不足していたファイルを追加する。
+v.0.1.2 Webhook URLを設定ファイルから読み込み、メッセージを（テスト用に）ファイルから読み込めるようにする。
+        logファイルを作成する。
 */
+const version = "000102"
+
+func readRawInput(args []string) ([]byte, error) {
+	for i := 0; i < len(args); i++ {
+		switch args[i] {
+		case "-F", "--file":
+			if i+1 >= len(args) {
+				return nil, fmt.Errorf("missing path after %s", args[i])
+			}
+			path := args[i+1]
+			data, err := os.ReadFile(path)
+			if err != nil {
+				return nil, fmt.Errorf("read input file %q: %w", path, err)
+			}
+			return data, nil
+		}
+	}
+	return io.ReadAll(os.Stdin)
+}
+
 func main() {
+
+	        // ログファイルの作成
+        logfile, err := exsrapi.CreateLogfile(version, exsrapi.Version, srapi.Version)
+        if err != nil {
+                log.Printf("ログファイルの作成に失敗しました。%v\n", err)
+                return
+        }
+        defer logfile.Close()
+
+        // フォアグラウンド（端末に接続されているか）を判定
+        isForeground := term.IsTerminal(int(os.Stdout.Fd()))
+        if isForeground {
+                // フォアグラウンドならログファイル + コンソール
+                log.SetOutput(io.MultiWriter(logfile, os.Stdout))
+        } else {
+                // バックグラウンドならログファイルのみ
+                log.SetOutput(logfile)
+        }
+
+        log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
+        log.Printf("Version=%s Start\n", version)
+
+	type Config struct {
+		WebhookURL string `yaml:"webhook_url"`
+		Retries    int    `yaml:"retries"`
+		RetryDelay int    `yaml:"retry_delay"`
+	}
+	var config = &Config{}
+	err = exsrapi.LoadConfig("config.enc.yml", config)
+	if err != nil {
+		log.Printf("failed to load config: %v\n", err)
+		os.Exit(1)
+	}
+
 	webhookURL := os.Getenv("DISCORD_WEBHOOK_URL")
 	args := os.Args[1:]
 	if len(args) > 0 && strings.TrimSpace(args[0]) != "" && !strings.HasPrefix(args[0], "-") {
@@ -25,8 +87,14 @@ func main() {
 		args = args[1:]
 	}
 	if webhookURL == "" {
-		fmt.Fprintln(os.Stderr, "DISCORD_WEBHOOK_URL is required or pass webhook url as the first argument")
-		os.Exit(1)
+		log.Printf("DISCORD_WEBHOOK_URL is required or pass webhook url as the first argument")
+		// os.Exit(1)
+		if config.WebhookURL != "" {
+			webhookURL = config.WebhookURL
+		} else {
+			log.Printf("Webhook URL is not set in config file either.")
+			os.Exit(1)
+		}
 	}
 
 	retries := 3
@@ -55,6 +123,10 @@ func main() {
 				from = args[i+1]
 				i++
 			}
+		case "-F", "--file":
+			if i+1 < len(args) {
+				i++
+			}
 		case "-t":
 			// Ignore; recipients are already in the message headers when a full mail is provided.
 		case "-i", "-oi":
@@ -70,9 +142,9 @@ func main() {
 		}
 	}
 
-	raw, err := io.ReadAll(os.Stdin)
+	raw, err := readRawInput(args)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to read stdin: %v\n", err)
+		log.Printf("failed to read stdin/input file: %v\n", err)
 		os.Exit(1)
 	}
 	if strings.TrimSpace(string(raw)) == "" {
@@ -84,7 +156,7 @@ func main() {
 
 	msg, err := mail.Parse(string(raw))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to parse message: %v\n", err)
+		log.Printf("failed to parse message: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -93,12 +165,12 @@ func main() {
 		failedLog := os.Getenv("DISCORD_FAILED_LOG_PATH")
 		if failedLog != "" {
 			if writeErr := os.WriteFile(failedLog, payload, 0600); writeErr != nil {
-				fmt.Fprintf(os.Stderr, "failed to persist payload to %s: %v\n", failedLog, writeErr)
+				log.Printf("failed to persist payload to %s: %v\n", failedLog, writeErr)
 			}
 		}
-		fmt.Fprintf(os.Stderr, "failed to send webhook after retries: %v\n", err)
+		log.Printf("failed to send webhook after retries: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("sent: %s\n", msg.Subject)
+	log.Printf("sent: %s\n", msg.Subject)
 }

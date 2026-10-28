@@ -1,0 +1,16 @@
+webhook_url: https://discord.com/api/webhooks/1563536699936612362/Civ0Avi53lhcxkW7gD1HO4Rhr5w986CeIijYrRfKZBI0XTGHkMcmFXi07j7MpmpiP_E8
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAxM1VSUUhhOUZMd1VDU3Zh
+            SkhJWmorS3dSOWZjbTZuZVdyZWNXNXlydEZNCkdlSzRsV1VRUWtRQTBHNmwvWnUx
+            dWRUZUhqbXg0Q1JGZ1VSU3BXVWw4RHMKLS0tIGpqSXBieEwzS1Z1dUpTbkpid1NU
+            Z0ZHZjZDWHVDOERlRW80ZGZDVGdvejQKHFXkyMG3w5B3r0IfKSySJwUkdcqSMry/
+            STmcWSjbxoD3Xg8zTciwx57pIqMSbXxWTaWfbWDctEAmFTw/J2LZjQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age13mlf945e3emk75ys348xttw048ufq7vpgw7l94g63tl5pt03mdrsfqra2l
+    encrypted_regex: ^(apikey|SRuser|SRpswd|DBuser|DBpswd|DBname|TurnstileSiteKey|TurnstileSecretKey|IPEncryptionKeyHex|sr_acct|sr_pswd)$
+    lastmodified: "2026-10-28T06:58:53Z"
+    mac: ENC[AES256_GCM,data:UfXY+OjxEr0DS+5P0/J9en21KKtbpdU0hUrOPV8DySFClNGfPHFG/mkVKYpItGoAfcQqULxHdB3HHJxkXTfV0wtsNWLh1RLC3pN1yCINtN5cZm6aneOKRqOJ09iIQ0Jf0U8FIUJ4VH7sba/Qp1fajv0pchLsd97lQPB9jaHXhcg=,iv:Wmzbl4KlyNEHVrPORFluuV8xKFWi90NnZEdUSJUscEw=,tag:O/0oegWCXO3dyNII7IVALA==,type:str]
+    version: 3.13.3
