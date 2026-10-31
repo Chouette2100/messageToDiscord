@@ -9,12 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/term"
-
 	"messageToDiscord/internal/discord"
 	"messageToDiscord/internal/mail"
 
-	"github.com/Chouette2100/srapi/v2"
 	"github.com/Chouette2100/exsrapi/v2"
 )
 
@@ -23,9 +20,11 @@ sendmailのふりをして受け取ったメールをDiscordに転送する
 
 v.0.1.1 不足していたファイルを追加する。
 v.0.1.2 Webhook URLを設定ファイルから読み込み、メッセージを（テスト用に）ファイルから読み込めるようにする。
-        logファイルを作成する。
+v.0.1.3 ログローテーションの設定を追加する。
+
+	logファイルを作成する。
 */
-const version = "000102"
+const version = "000103"
 
 func readRawInput(args []string) ([]byte, error) {
 	for i := 0; i < len(args); i++ {
@@ -46,27 +45,14 @@ func readRawInput(args []string) ([]byte, error) {
 }
 
 func main() {
+	stopLogRotation, err := setupDailyLogRotation(version)
+	if err != nil {
+		log.Printf("ログファイルの作成に失敗しました。%v\n", err)
+		return
+	}
+	defer stopLogRotation()
 
-	        // ログファイルの作成
-        logfile, err := exsrapi.CreateLogfile(version, exsrapi.Version, srapi.Version)
-        if err != nil {
-                log.Printf("ログファイルの作成に失敗しました。%v\n", err)
-                return
-        }
-        defer logfile.Close()
-
-        // フォアグラウンド（端末に接続されているか）を判定
-        isForeground := term.IsTerminal(int(os.Stdout.Fd()))
-        if isForeground {
-                // フォアグラウンドならログファイル + コンソール
-                log.SetOutput(io.MultiWriter(logfile, os.Stdout))
-        } else {
-                // バックグラウンドならログファイルのみ
-                log.SetOutput(logfile)
-        }
-
-        log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
-        log.Printf("Version=%s Start\n", version)
+	log.Printf("Version=%s Start\n", version)
 
 	type Config struct {
 		WebhookURL string `yaml:"webhook_url"`
